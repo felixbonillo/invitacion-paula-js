@@ -1,103 +1,180 @@
+"use client";
+
 import Image from "next/image";
+import { useSearchParams } from "next/navigation"; // Para leer el nombre del invitado
+import { useGyroParallax } from "@/hooks/useGyroParallax"; // Nuestro custom hook
 
-export default function Home() {
+export default function ParallaxInvitation() {
+  // Usamos nuestro custom hook para obtener las coordenadas de movimiento del giroscopio
+  const { coords, requestIOSPermission, showPermissionPrompt } =
+    useGyroParallax(15);
+  const { x, y } = coords; // Desestructuramos las coordenadas para usarlas directamente
+
+  // Usamos el hook de Next.js para leer los parámetros de la URL
+  const searchParams = useSearchParams();
+  // Obtenemos el valor del parámetro 'n'. Si no existe, usamos 'Querido Invitado'.
+  const guestNameParam = searchParams.get("n");
+  const guestName = guestNameParam
+    ? guestNameParam.charAt(0).toUpperCase() +
+      guestNameParam.slice(1).toLowerCase()
+    : "Querido Invitado";
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    // Contenedor principal: ocupa toda la altura de la pantalla, permite posicionamiento absoluto
+    // y tiene un fondo y tipografía base definidos en Tailwind.
+    <div className="min-h-screen relative overflow-hidden bg-white-nube font-quicksand text-text-dark">
+      {/* -------------------- ZONA DE EFECTOS PARALLAX 🐘 (Capas de Fondo) -------------------- */}
+      {/* Este div actúa como un contenedor para todas las capas que se moverán */}
+      <div className="absolute inset-0 z-0">
+        {/* Capa 1: Nubes Lejanas (Movimiento Muy Bajo) */}
+        {/* Es la capa más lejana, se mueve menos, dando sensación de profundidad */}
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            transform: `translate(${x * 0.2}px, ${y * 0.2}px)`, // Baja sensibilidad para poco movimiento
+            transition: "transform 0.1s ease-out", // Transición suave para evitar movimientos bruscos
+          }}
+        >
+          <Image
+            src="/assets/fondo.png"
+            layout="fill"
+            objectFit="cover"
+            alt="fondo de nubes"
+            priority // Carga esta imagen con prioridad para que el fondo aparezca rápido
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        {/* Capa 2: Pequeños Elefantes Voladores (Movimiento Medio) */}
+        {/* Creamos varios de estos para dispersarlos y añadir dinamismo */}
+        <div
+          className="absolute top-1/4 left-5 opacity-80"
+          style={{
+            transform: `translate(${x * 0.6}px, ${y * 0.6}px)`, // Sensibilidad media
+            transition: "transform 0.1s ease-out",
+          }}
         >
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src="/assets/elefante1.png"
+            width={100}
+            height={100}
+            alt="pequeño elefante flotando"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+        <div
+          className="absolute bottom-1/3 right-10 opacity-70"
+          style={{
+            transform: `translate(${x * 0.5}px, ${y * 0.5}px)`,
+            transition: "transform 0.1s ease-out",
+          }}
         >
           <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+            src="/assets/elefante2.png"
+            width={80}
+            height={80}
+            alt="pequeño elefante flotando"
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+
+        {/* Capa 3: Globos Flotantes (Movimiento Más Alto) */}
+        {/* Estos se moverán más, dando la sensación de estar más cerca del usuario */}
+        <div
+          className="absolute top-10 right-10 opacity-90"
+          style={{
+            transform: `translate(${x * 1.5}px, ${y * 1.5}px)`, // Alta sensibilidad
+            transition: "transform 0.1s ease-out",
+          }}
         >
           <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+            src="/assets/globos.png"
+            width={80}
+            height={120}
+            alt="globos voladores"
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+        <div
+          className="absolute bottom-20 left-10 opacity-80"
+          style={{
+            transform: `translate(${x * 1.2}px, ${y * 1.2}px)`,
+            transition: "transform 0.1s ease-out",
+          }}
+        >
+          <Image
+            src="/assets/globos.png"
+            width={60}
+            height={90}
+            alt="globos voladores"
+          />
+        </div>
+      </div>{" "}
+      {/* Fin ZONA DE EFECTOS PARALLAX */}
+      {/* -------------------- CONTENIDO PRINCIPAL (Fijo y Superpuesto) -------------------- */}
+      {/* Este div contiene el texto y los elementos interactivos, y se mantiene fijo */}
+      <div className="relative z-10 p-6 pt-[60vh] md:pt-40 flex flex-col items-center">
+        {/* Título Principal y Elefante Grande (parte más importante de la invitación) */}
+        <div className="absolute top-[15vh] md:top-20 left-1/2 -translate-x-1/2 text-center z-20">
+          <Image
+            src="/assets/elefante1.png"
+            width={300}
+            height={300}
+            alt="elefante bebé principal"
+            className="mx-auto drop-shadow-lg"
+          />
+          <h1 className="text-5xl md:text-6xl font-script text-pink-baby mt-4 shadow-text">
+            ¡Paula Viene en Camino!
+          </h1>
+        </div>
+
+        {/* Tarjeta de Contenido con la información y el saludo */}
+        <div className="bg-white-nube/95 backdrop-blur-sm p-6 rounded-3xl shadow-2xl border-4 border-mint-pastel max-w-sm md:max-w-md w-full mx-auto mt-8">
+          {/* Saludo Personalizado al invitado */}
+          <h2 className="text-2xl font-quicksand text-text-dark mb-4 text-center">
+            Hola, <span className="font-bold text-pink-baby">{guestName}</span>
+          </h2>
+
+          {/* Información del Evento */}
+          <p className="text-lg mb-6 text-gray-700 text-center">
+            Únete a nosotros para celebrar la inminente llegada de nuestra
+            pequeña princesa. ¡Estamos ansiosos de que conozcas a Paula!
+          </p>
+
+          {/* Espacio para la Cuenta Regresiva (Se implementará en Sprint 2) */}
+          <div className="text-center mt-4 mb-6">
+            <p className="text-xl font-bold text-mint-pastel">
+              Tiempo restante:
+            </p>
+            <p className="text-3xl font-script text-pink-baby">
+              00 días 00h 00m 00s
+            </p>
+          </div>
+
+          {/* Botón de Acción (RSVP - Se mejorará en Sprint 2) */}
+          <div className="mt-8">
+            <button className="w-full bg-pink-baby hover:bg-pink-400 text-white-nube font-bold py-3 rounded-full shadow-lg transition duration-300">
+              ¡Quiero confirmar mi asistencia!
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Prompt de Permiso para iOS (Se muestra si se necesita y no se ha otorgado) */}
+      {showPermissionPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]">
+          <div className="bg-white p-8 rounded-lg shadow-xl text-center max-w-xs mx-4">
+            <p className="text-lg font-bold mb-4 text-text-dark">
+              Activar Movimiento 3D
+            </p>
+            <p className="text-gray-700 mb-6">
+              Para disfrutar del efecto de movimiento, necesitamos tu permiso
+              para acceder al sensor de movimiento.
+            </p>
+            <button
+              onClick={requestIOSPermission}
+              className="bg-pink-baby hover:bg-pink-400 text-white-nube font-bold py-2 px-4 rounded-full transition duration-300"
+            >
+              Permitir Movimiento
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
