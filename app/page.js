@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useSearchParams } from "next/navigation"; // Para leer el nombre del invitado
-import { useGyroParallax } from "@/hooks/useGyroParallax"; // Nuestro custom hook
+import { useGyroParallax } from "@/hooks/useGyroParallax"; // custom hook
+import CountdownTimer from "@/components/CountdownTimer";
 
 export default function ParallaxInvitation() {
   // Usamos nuestro custom hook para obtener las coordenadas de movimiento del giroscopio
@@ -86,8 +87,8 @@ export default function ParallaxInvitation() {
         >
           <Image
             src="/assets/globos.png"
-            width={80}
-            height={120}
+            width={110}
+            height={60}
             alt="globos voladores"
           />
         </div>
@@ -100,8 +101,8 @@ export default function ParallaxInvitation() {
         >
           <Image
             src="/assets/globos.png"
-            width={60}
-            height={90}
+            width={180}
+            height={120}
             alt="globos voladores"
           />
         </div>
@@ -113,9 +114,9 @@ export default function ParallaxInvitation() {
         {/* Título Principal y Elefante Grande (parte más importante de la invitación) */}
         <div className="absolute top-[15vh] md:top-20 left-1/2 -translate-x-1/2 text-center z-20">
           <Image
-            src="/assets/elefante1.png"
-            width={300}
-            height={300}
+            src="/assets/elefante4.png"
+            width={600}
+            height={900}
             alt="elefante bebé principal"
             className="mx-auto drop-shadow-lg"
           />
@@ -134,17 +135,13 @@ export default function ParallaxInvitation() {
           {/* Información del Evento */}
           <p className="text-lg mb-6 text-gray-700 text-center">
             Únete a nosotros para celebrar la inminente llegada de nuestra
-            pequeña princesa. ¡Estamos ansiosos de que conozcas a Paula!
+            pequeña princesa. ¡Estamos ansiosos de que conozcas a nuestra
+            elefanta Paula!
           </p>
 
           {/* Espacio para la Cuenta Regresiva (Se implementará en Sprint 2) */}
           <div className="text-center mt-4 mb-6">
-            <p className="text-xl font-bold text-mint-pastel">
-              Tiempo restante:
-            </p>
-            <p className="text-3xl font-script text-pink-baby">
-              00 días 00h 00m 00s
-            </p>
+            <CountdownTimer />
           </div>
 
           {/* Botón de Acción (RSVP - Se mejorará en Sprint 2) */}
