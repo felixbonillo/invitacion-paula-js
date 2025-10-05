@@ -11,3 +11,31 @@ body {
 .shadow-text {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+:root {
+  --pink-baby: #f7bfcb;
+  --white-nube: #ffffff;
+  --text-dark: #374151;
+  --baby-pink: #F7BFCB;
+  --baby-ink: #374151;
+}
+
+.font-script {
+  font-family: "Dancing Script", cursive;
+}
+
+.font-quicksand {
+  font-family: var(--font-quicksand), system-ui, sans-serif;
+}
+
+.text-pink-baby {
+  color: var(--pink-baby);
+}
+
+.bg-white-nube {
+  background: var(--white-nube);
+}
+
+.text-text-dark {
+  color: var(--text-dark);
+}

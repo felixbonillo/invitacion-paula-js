@@ -1,7 +1,8 @@
 import React from "react";
 import Countdown from "react-countdown";
 
-const BABY_SHOWER_DATE = new Date("2025-10-12T15:00:00");
+const DATA_ISO =
+  process.env.NEXT_PUBLIC_EVENT_ISO || "2025-10-19T15:00:00-04:00";
 
 // Componente Renderer: define cómo se ve la cuenta regresiva en cada tick
 const renderer = ({ days, hours, minutes, seconds, completed }) => {
@@ -15,9 +16,8 @@ const renderer = ({ days, hours, minutes, seconds, completed }) => {
   // Si el tiempo NO ha terminado, mostramos el formato de cuenta regresiva
   return (
     <p className="text-3xl font-script text-pink-baby">
-      {days.toString().padStart(2, "0")} días{" "}
-      {hours.toString().padStart(2, "0")}h {minutes.toString().padStart(2, "0")}
-      m {seconds.toString().padStart(2, "0")}s
+      {String(days).padStart(2, "0")} días {String(hours).padStart(2, "0")}h{" "}
+      {String(minutes).padStart(2, "0")}m {String(seconds).padStart(2, "0")}s
     </p>
   );
 };
@@ -29,7 +29,7 @@ export default function CountdownTimer() {
       <p className="text-xl font-bold text-mint-pastel mb-1">
         Tiempo restante:
       </p>
-      <Countdown date={BABY_SHOWER_DATE} renderer={renderer} />
+      <Countdown date={new Date(DATA_ISO)} renderer={renderer} />
     </div>
   );
 }

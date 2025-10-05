@@ -1,86 +1,90 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
+
+/*
+ * Hook de parallax
+ * SSR-safe (No lee window/navigator en top-level)
+ * Throttle con requestAnimationFrame para renderizar suave
+ * Soporta permisos IOS + fallback a pointermove
+ */
 
 export function useGyroParallax(sensitivity = 15) {
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const [permissionGranted, setPermissionGranted] = useState(false);
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const coordsRef = useRef({ x: 0, y: 0 });
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
 
-  // Usamos useCallback para memoizar la función de solicitud de permiso.
-  // Esto es una buena práctica y asegura que la función no cambie innecesariamente.
-  const requestIOSPermission = useCallback(async () => {
-    // 'requestPermission' solo existe en dispositivos iOS 13+
-    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+  //Pedir permiso en IOS (Cuando el usuario pulse)
+  const requestIOSPermission = async () => {
+    if (typeof window === "undefined") return;
+    const isIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+    const hasAPI =
+      "DeviceOrientationEvent" in window &&
+      typeof window.DeviceOrientationEvent.requestPermission === "function";
+
+    if (isIOS && hasAPI) {
       try {
-        const permissionState =
-          await DeviceOrientationEvent.requestPermission();
-        if (permissionState === "granted") {
-          setPermissionGranted(true);
-          setShowPermissionPrompt(false); // Ocultar el prompt si se otorga
-          console.log("Permiso de giroscopio otorgado.");
-        } else {
-          console.warn("Permiso de giroscopio denegado.");
-          alert(
-            "Para el efecto 3D, por favor permite el acceso al sensor de movimiento en la configuración de tu dispositivo."
-          );
-          setPermissionGranted(false);
-          setShowPermissionPrompt(false);
-        }
-      } catch (error) {
-        console.error("Error al solicitar permiso de giroscopio:", error);
+        const state = await window.DeviceOrientationEvent.requestPermission();
+        setPermissionGranted(state === "granted");
+        setShowPermissionPrompt(false);
+      } catch {
         setPermissionGranted(false);
         setShowPermissionPrompt(false);
       }
-    } else {
-      // En otros navegadores (Android, Desktop), no se necesita permiso explícito
-      setPermissionGranted(true);
-      setShowPermissionPrompt(false);
     }
-  }, []); // Array de dependencias vacío, esta función no necesita recrearse
+  };
 
   useEffect(() => {
-    if (!window.DeviceOrientationEvent) {
-      console.warn("DeviceOrientationEvent no soportado en este navegador.");
-      setPermissionGranted(false);
-      return;
-    }
+    if (typeof window === "undefined") return;
+    let raf = 0;
+    let needsRAF = false;
 
-    const isIOS =
-      /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const push = (x, y) => {
+      coordsRef.current.x = x;
+      coordsRef.current.y = y;
+      if (!needsRAF) {
+        needsRAF = true;
+        raf = requestAnimationFrame(() => {
+          needsRAF = false;
+          setCoords({ ...coordsRef.current });
+        });
+      }
+    };
 
-    // Si es iOS, el permiso NO ha sido otorgado, y la función para pedir permiso existe,
-    // entonces mostramos el prompt.
-    if (
+    const onOrient = (e) => {
+      //Normalizamos -45..45 -> -1..1
+      const gx = Math.max(-1, Math.max(-1, Math.min(1, (e.gamma ?? 0) / 45)));
+      const gy = Math.max(-1, Math.min(1, (e.beta ?? 0) / 45));
+      push(-(gx * sensitivity), gy * sensitivity);
+    };
+
+    const onPointer = (e) => {
+      const { innerWidth: w, innerHeight: h } = window;
+      const nx = (e.clientX / w - 0.5) * 2;
+      const ny = (e.clientY / h - 0.5) * 2;
+      push(nx * sensitivity, ny * sensitivity);
+    };
+
+    const isIOS = /iPhone | iPad | iPod /.test(window.navigator.userAgent);
+    const needsPermission =
       isIOS &&
-      !permissionGranted &&
-      typeof DeviceOrientationEvent.requestPermission === "function"
-    ) {
+      "DeviceOrientationEvent" in window &&
+      typeof window.DeviceOrientationEvent.requestPermission === "function";
+
+    if (needsPermission && !permissionGranted) {
       setShowPermissionPrompt(true);
-    } else if (!isIOS) {
-      // No es iOS, o no tiene la función de pedir permiso, asumimos que está bien o no es necesario
-      setPermissionGranted(true);
-      setShowPermissionPrompt(false); // Asegurarnos de que el prompt no se muestre en no-iOS
+      window.addEventListener("pointermove", onPointer);
+    } else {
+      if ("DeviceOrientationEvent" in window) {
+        window.addEventListener("deviceorientation", onOrient);
+      } else {
+        window.addEventListener("pointermove", onPointer);
+      }
     }
-
-    const handleOrientation = (event) => {
-      const moveX = (event.gamma || 0) * (sensitivity / 90);
-      const moveY = (event.beta || 0) * (sensitivity / 180);
-
-      setCoords({
-        x: -moveX,
-        y: moveY,
-      });
-    };
-
-    if (permissionGranted) {
-      // Solo si el permiso está otorgado, añadimos el listener
-      window.addEventListener("deviceorientation", handleOrientation);
-    }
-
     return () => {
-      window.removeEventListener("deviceorientation", handleOrientation);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("deviceorientation", onOrient);
+      window.removeEventListener("pointermove", onPointer);
     };
-  }, [sensitivity, permissionGranted, requestIOSPermission]); // Añadimos requestIOSPermission a las dependencias
-
-  // El hook devuelve un objeto con coords, la función requestIOSPermission y el estado showPermissionPrompt
+  }, [permissionGranted, sensitivity]);
   return { coords, requestIOSPermission, showPermissionPrompt };
 }
