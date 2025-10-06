@@ -2,106 +2,84 @@
 import React from "react";
 import Button from "./ui/Button";
 
-function slugify(s) {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
-
 export default function LinkGenerator() {
   const [name, setName] = React.useState("");
-  const slug = slugify(name);
-  const url =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/${slug || "invitado"}`
-      : "";
+  const [link, setLink] = React.useState("");
 
-  const canCreate = slug.length >= 3;
+  // Generar slug limpio
+  const slugify = (str) =>
+    str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/--+/g, "-")
+      .replace(/^-+|-+$/g, "");
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      alert("¡Enlace copiado!");
-    } catch {
-      // fallback: no hacemos nada si no hay permiso
-    }
+  // Crear enlace
+  const handleGenerate = () => {
+    if (!name.trim()) return;
+    const slug = slugify(name.trim());
+    const base = window.location.origin;
+    const url = `${base}/${slug}`;
+    setLink(url);
   };
 
-  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(
-    `¡Hola! Te comparto, me genera mucha felicidad invitarte: ${url}`
-  )}`;
+  const handleCopy = async () => {
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    alert("✅ Enlace copiado al portapapeles");
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!link) return;
+    const message =
+      `🎀 ¡Hola ${name.trim()}! 🎀\n\n` +
+      `Estás invitado al Baby Shower de Paula 🐘💖\n` +
+      `Puedes ver tu invitación personalizada aquí:\n${link}\n\n` +
+      `Confirma tu asistencia en el formulario. ¡Te esperamos! 🍼`;
+    const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, "_blank");
+  };
 
   return (
-    <section className="mt-6">
-      <div className="rounded-2xl border border-[var(--baby-ink,#374151)]/10 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
-        <h2 className="text-center font-[Dancing_Script] text-2xl text-[var(--baby-pink,#F7BFCB)]">
-          ¡Paula viene en camino!
+    <section className="relative flex min-h-[100vh] flex-col items-center justify-center px-4 text-center">
+      <div className="w-full max-w-sm rounded-2xl border border-black/10 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+        <h2 className="mb-4 text-xl font-bold text-[var(--baby-ink,#374151)]">
+          Generar invitación personalizada
         </h2>
-        <p className="mt-1 text-center text-sm text-[var(--baby-ink,#374151)]/70">
-          Crea tu enlace personalizado para cada invitado:
-        </p>
+
+        <label className="mb-2 block text-sm text-black/60">
+          Nombre del invitado
+        </label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ej: Félix Bonillo"
+          className="w-full rounded-xl border border-black/15 bg-white/70 px-4 py-3 text-sm shadow-sm placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--baby-pink,#F7BFCB)]/50"
+        />
 
         <div className="mt-4 space-y-3">
-          <label className="block text-xs font-medium text-[var(--baby-ink,#374151)]/70">
-            Nombre del invitado
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Ej. María Gómez"
-            className="w-full rounded-xl border border-[var(--baby-ink,#374151)]/15 bg-white/70 px-4 py-3 text-sm shadow-sm placeholder:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--baby-pink,#F7BFCB)]/50"
-          />
-
-          {/* Píldora del slug para feedback visual */}
-          <div className="text-xs text-[var(--baby-ink,#374151)]/60">
-            Slug:{" "}
-            <span className="rounded-full bg-black/5 px-2 py-1">
-              {slug || "invitado"}
-            </span>
-          </div>
-
-          {/* Botones */}
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              href={`/${slug || "invitado"}`}
-              fullWidth
-              disabled={!canCreate}
-              aria-disabled={!canCreate}
-            >
-              Ver invitación
-            </Button>
-            <Button
-              onClick={copy}
-              variant="white"
-              fullWidth
-              disabled={!canCreate}
-              aria-disabled={!canCreate}
-              title="Copiar enlace"
-            >
-              Copiar
-            </Button>
-          </div>
-
-          {/* Compartir por WhatsApp (opcional) */}
-          <Button
-            as="a"
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="ghost"
-            fullWidth
-            className="mt-1"
-          >
-            Compartir por WhatsApp
+          <Button fullWidth onClick={handleGenerate}>
+            Generar link
           </Button>
 
-          {/* Preview del enlace */}
-          <div className="mt-2 break-all text-center text-xs text-[var(--baby-ink,#374151)]/70">
-            {url}
-          </div>
+          {link && (
+            <>
+              <p className="break-words text-sm text-black/70">{link}</p>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+                <Button variant="white" size="md" onClick={handleCopy}>
+                  Copiar link 📋
+                </Button>
+                <Button variant="pink" size="md" onClick={handleShareWhatsApp}>
+                  Compartir por WhatsApp 💬
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

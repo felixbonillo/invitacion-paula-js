@@ -20,6 +20,10 @@ body {
   --baby-ink: #374151;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 .font-script {
   font-family: "Dancing Script", cursive;
 }
