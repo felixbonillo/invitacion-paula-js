@@ -26,10 +26,57 @@ export default function LinkGenerator() {
     setLink(url);
   };
 
+  // Copia/Share robusto (iOS/HTTPS friendly)
   const handleCopy = async () => {
     if (!link) return;
-    await navigator.clipboard.writeText(link);
-    alert("✅ Enlace copiado al portapapeles");
+
+    // 1) Web Share: UX nativa en móviles
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Invitación de Paula",
+          text: link,
+          url: link,
+        });
+        return;
+      } catch {
+        // si cancelan, seguimos a copiar
+      }
+    }
+
+    // 2) Clipboard API si hay contexto seguro
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(link);
+        alert("✅ Enlace copiado al portapapeles");
+        return;
+      } catch {
+        // continuamos al fallback
+      }
+    }
+
+    // 3) Fallback universal (execCommand)
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = link;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-1000px";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (ok) {
+        alert("✅ Enlace copiado al portapapeles");
+        return;
+      }
+    } catch {
+      // último recurso
+    }
+
+    // 4) Prompt manual
+    window.prompt("Copia el enlace:", link);
   };
 
   const handleShareWhatsApp = () => {

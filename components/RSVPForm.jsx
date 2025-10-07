@@ -53,7 +53,6 @@ export default function RSVPForm({ prefillName = "" }) {
             setStatus("ok");
             formEl.reset(); // ✅ usa la referencia en lugar de e.currentTarget
             fireConfetti();
-            setTimeout(() => setStatus("idle"), 4000);
         } catch (err) {
             setStatus("error");
             setErrorMsg(err?.message || "No pudimos enviar el formulario. Intenta de nuevo.");
@@ -61,7 +60,28 @@ export default function RSVPForm({ prefillName = "" }) {
     }
 
 
-    return (
+    return status === "ok" ? (
+        // ✅ Mensaje de agradecimiento (reemplaza el form)
+        <div className="rounded-2xl border border-black/10 bg-white/90 p-5 shadow-sm backdrop-blur-sm text-center animate-fade-in">
+            <h3 className="text-2xl font-[Dancing_Script] text-[var(--baby-pink,#F7BFCB)]">
+                ¡Gracias {prefillName || "de corazón"}! 💖
+            </h3>
+
+            <p className="mt-2 text-sm text-black/80 font-medium">
+                Un Mensaje de Mamá y Papá:
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-black/70">
+                Saber que Paula tiene tanto cariño a su alrededor es nuestro tesoro más grande.
+                ¡Gracias por compartir esta alegría!
+            </p>
+
+            <p className="mt-5 text-xs text-black/50">
+                Si deseas cambiar tus datos, puedes recargar la página.
+                Con cariño, <span className="italic text-[var(--baby-pink,#F7BFCB)]">Mamá, Papá y Paula 🐘</span>.
+            </p>
+        </div>
+    ) : (
+        // 🧾 Formulario (igual que lo tenías)
         <form onSubmit={onSubmit} noValidate className="space-y-3">
             <div className="rounded-2xl border border-black/10 bg-white/90 p-4 shadow-sm backdrop-blur-sm">
                 <h3 className="mb-2 text-center text-sm font-medium text-black/70">
@@ -110,11 +130,6 @@ export default function RSVPForm({ prefillName = "" }) {
                     </Button>
                 </div>
 
-                {status === "ok" && (
-                    <p className="mt-3 text-center text-sm text-green-600">
-                        ¡Gracias! Registramos tu asistencia.
-                    </p>
-                )}
                 {status === "error" && (
                     <p className="mt-2 text-center text-sm text-red-600">{errorMsg}</p>
                 )}
