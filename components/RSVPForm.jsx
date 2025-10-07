@@ -67,9 +67,6 @@ export default function RSVPForm({ prefillName = "" }) {
                 ¡Gracias {prefillName || "de corazón"}! 💖
             </h3>
 
-            <p className="mt-2 text-sm text-black/80 font-medium">
-                Un Mensaje de Mamá y Papá:
-            </p>
             <p className="mt-1 text-sm leading-relaxed text-black/70">
                 Saber que Paula tiene tanto cariño a su alrededor es nuestro tesoro más grande.
                 ¡Gracias por compartir esta alegría!
