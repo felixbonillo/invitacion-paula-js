@@ -1,8 +1,6 @@
 import "./globals.css";
-// Importamos solo las fuentes que realmente vamos a usar en el layout y en Tailwind
 import { Dancing_Script, Quicksand } from "next/font/google";
 
-// Configuramos las fuentes usando la API de Next/Font
 const dancingScript = Dancing_Script({
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -15,15 +13,38 @@ const quicksand = Quicksand({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://invitacion-paula.vercel.app"), // 👈 importante
   title: "La Invitación de Paula",
   description: "¡Ven a celebrar la llegada de nuestra pequeña elefanta Paula!",
+  openGraph: {
+    title: "Baby Shower de Paula 🎀",
+    description:
+      "Descubre tu invitación personalizada y acompáñanos en este día tan especial 🐘💖",
+    url: "/", // gracias a metadataBase será absoluta
+    siteName: "La Invitación de Paula",
+    images: [
+      {
+        url: "/assets/elefante1.png", // se resuelve a https://.../assets/elefante1.png
+        width: 800,
+        height: 800,
+        alt: "Elefantita con globos - Baby Shower de Paula",
+      },
+    ],
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Baby Shower de Paula 🎀",
+    description:
+      "Descubre tu invitación personalizada y acompáñanos en este día tan especial 🐘💖",
+    images: ["/assets/elefante1.png"],
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      {/* Aplicamos las clases de fuente al body. 
-          'font-quicksand' será la fuente por defecto para todo el texto. */}
       <body
         className={`${dancingScript.variable} ${quicksand.variable} font-quicksand`}
       >
