@@ -127,6 +127,16 @@ export default function InvitePage() {
           <div className="mt-3 text-center">
             <span className="text-md font-medium">
               <span className=" text-[var(--baby-pink,#374151)]/90 font-bold">
+                Lugar:
+              </span>{" "}
+              <a href="https://maps.app.goo.gl/XUv5V4rPuPh9Tx1T7">
+                {" "}
+                Ver ubicacion
+              </a>
+            </span>
+            <br />
+            <span className="text-md font-medium">
+              <span className=" text-[var(--baby-pink,#374151)]/90 font-bold">
                 Fecha:
               </span>{" "}
               <span>Domingo, 19 de Octubre</span>
