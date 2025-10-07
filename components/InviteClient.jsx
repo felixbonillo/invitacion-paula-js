@@ -7,6 +7,13 @@ import PaulaWelcome from "@/components/PaulaWelcome";
 import WishList from "@/components/WishList";
 import RSVPForm from "@/components/RSVPForm";
 
+// 📍 Dirección (texto fijo)
+const ADDRESS =
+    "5ta avenida, entre Av. Bolivar y Calle Peru. Catia.";
+
+// URL de Google Maps a partir de la dirección
+const MAPS_URL = `https://maps.app.goo.gl/3g6gWe8sMChcPtKP6`;
+
 const CountdownTimer = dynamic(() => import("@/components/CountdownTimer"), {
     ssr: false,
 });
@@ -107,13 +114,6 @@ export default function InviteClient({ initialName }) {
                     <div className="mt-3 text-center">
                         <span className="text-md font-medium">
                             <span className=" text-[var(--baby-pink,#374151)]/90 font-bold">
-                                Lugar:
-                            </span>{" "}
-                            <a href="https://maps.app.goo.gl/XUv5V4rPuPh9Tx1T7"> Ver ubicacion</a>
-                        </span>
-                        <br />
-                        <span className="text-md font-medium">
-                            <span className=" text-[var(--baby-pink,#374151)]/90 font-bold">
                                 Fecha:
                             </span>{" "}
                             <span>Domingo, 19 de Octubre</span>
@@ -126,7 +126,46 @@ export default function InviteClient({ initialName }) {
                             <span>2:00 Pm.</span>
                         </span>
                         <br />
+                        <br />
                         <CountdownTimer />
+                        <br />
+                        <br />
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-[var(--baby-dark,#374151)]">
+                                Dirección
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                {/* Icono de ubicación */}
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                    className="h-5 w-5 text-[var(--baby-pink,#F7BFCB)]"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                                {/* Enlace a Google Maps */}
+                                <a
+                                    href={MAPS_URL}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="rounded-xl bg-[var(--baby-pink,#F7BFCB)] px-3 py-1 text-xs font-semibold text-white shadow-sm hover:opacity-90"
+                                    aria-label="Abrir en Google Maps"
+                                    title="Abrir en Google Maps"
+                                >
+                                    Ver en Maps
+                                </a>
+                            </div>
+                        </div>
+
+                        <p className="mt-2 text-sm leading-relaxed text-[var(--baby-ink,#374151)]/90">
+                            {ADDRESS}
+                        </p>
                     </div>
                 </div>
             </section>
