@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <head>
         {/* acelera el primer play en vercel */}
-        <link rel="preload" href="/audio/cancionElefante.mp3" />
+        <link rel="preload" href="/audio/cancionelefante.mp3" />
       </head>
       <body
         className={`${dancingScript.variable} ${quicksand.variable} font-quicksand`}
