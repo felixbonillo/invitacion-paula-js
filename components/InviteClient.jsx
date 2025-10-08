@@ -46,6 +46,7 @@ export default function InviteClient({ initialName }) {
 
     // Contenido de la invitación (hero + countdown + wishlist visual + formulario)
     return (
+
         <main
             id="invite-top"
             className="relative mx-auto min-h-screen max-w-sm overflow-hidden px-4 text-center"
