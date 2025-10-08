@@ -12,7 +12,7 @@ const MAPS_URL = `https://maps.app.goo.gl/3g6gWe8sMChcPtKP6`;
 
 // Si usas basePath, define NEXT_PUBLIC_BASE_PATH="/tu-base"
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
-const AUDIO_PATH = "/audio/cancionElefante.mp3"; // en /public
+const AUDIO_PATH = "/audio/cancionelefante.mp3"; // en /public
 const AUDIO_URL = (origin) => new URL(`${BASE_PATH}${AUDIO_PATH}`, origin).toString();
 
 const FADE_TARGET = 0.85;
