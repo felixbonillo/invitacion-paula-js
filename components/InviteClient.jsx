@@ -7,110 +7,66 @@ import PaulaWelcome from "@/components/PaulaWelcome";
 import WishList from "@/components/WishList";
 import RSVPForm from "@/components/RSVPForm";
 
+// 📍 Dirección
 const ADDRESS = "5ta avenida, entre Av. Bolivar y Calle Peru. Catia.";
 const MAPS_URL = `https://maps.app.goo.gl/3g6gWe8sMChcPtKP6`;
 
-// Si usas basePath, define NEXT_PUBLIC_BASE_PATH="/tu-base"
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
-const AUDIO_PATH = "/audio/cancionelefante.mp3"; // en /public
-const AUDIO_URL = (origin) => new URL(`${BASE_PATH}${AUDIO_PATH}`, origin).toString();
+// ⬇️ Usa el que tengas en /public/audio/  (elige uno y borra el otro)
+const AUDIO_PATH = "/audio/cancionelefante.mp3";     // todo minúsculas
+// const AUDIO_PATH = "/audio/cancionElefante.mp3";  // si renombraste con E mayúscula
 
-const FADE_TARGET = 0.85;
-const FADE_MS = 1200;
+const FADE_TARGET = 0.85;  // volumen final
+const FADE_MS = 1800;      // duración del fade-in
 
 const CountdownTimer = dynamic(() => import("@/components/CountdownTimer"), { ssr: false });
 
 function toTitle(s = "") {
-    return s
-        .split("-")
-        .filter(Boolean)
-        .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
-        .join(" ");
+    return s.split("-").filter(Boolean).map(w => (w ? w[0].toUpperCase() + w.slice(1) : "")).join(" ");
+}
+
+// 🔊 Fade-in lineal con rAF (suave y preciso)
+function fadeIn(el, target = FADE_TARGET, ms = FADE_MS) {
+    try {
+        const start = performance.now();
+        el.volume = 0;
+        const step = (t) => {
+            const k = Math.min(1, (t - start) / ms);
+            el.volume = 0 + (target - 0) * k;
+            if (k < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    } catch {
+        el.volume = target;
+    }
 }
 
 export default function InviteClient({ initialName }) {
     const [showInvite, setShowInvite] = React.useState(false);
     const name = initialName || "Invitado";
 
-    // 🎧 Audio en el DOM (clave para iOS)
+    // 🎧 Audio en el DOM (iOS friendly)
     const audioRef = React.useRef(null);
-    const objectUrlRef = React.useRef(null); // para revocar el blob al salir
 
-    React.useEffect(() => {
-        return () => {
-            // limpiar blob al desmontar
-            if (objectUrlRef.current) {
-                URL.revokeObjectURL(objectUrlRef.current);
-                objectUrlRef.current = null;
-            }
-        };
-    }, []);
-
-    // Carga defensiva: fetch -> blob -> objectURL (evita problemas de CDN/MIME)
-    const ensureAudioSrcLoaded = async (el) => {
+    // Carga defensiva: asegura src absoluto listo antes de play
+    const ensureSrc = (el) => {
         if (!el) return;
-        try {
-            if (el.src) return; // ya asignado
-            const origin = window.location.origin;
-            const absoluteUrl = AUDIO_URL(origin);
-
-            // 1) Comprobar rápido que el archivo existe (HEAD)
-            const head = await fetch(absoluteUrl, { method: "HEAD", cache: "no-store" });
-            if (!head.ok) {
-                console.warn(`[audio] HEAD ${absoluteUrl} -> ${head.status}`);
-            }
-
-            // 2) Descargar como blob (misma-origin, sin CORS)
-            const res = await fetch(absoluteUrl, { cache: "force-cache" });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const blob = await res.blob();
-
-            // (opcional) validar tipo
-            // if (!blob.type.includes("audio")) console.warn("[audio] MIME no-audio:", blob.type);
-
-            // 3) Crear objectURL y asignar al <audio>
-            const o = URL.createObjectURL(blob);
-            objectUrlRef.current = o;
-            el.src = o;
-        } catch (err) {
-            // Si el fetch falló, caemos al URL absoluto directo como fallback
-            try {
-                el.src = AUDIO_URL(window.location.origin);
-            } catch { }
-            console.error("[audio] fallback url directo:", err);
+        if (!el.src) {
+            el.src = new URL(AUDIO_PATH, window.location.origin).toString();
         }
     };
 
-    const fadeIn = (el) => {
-        try {
-            el.volume = 0;
-            const steps = Math.max(1, Math.floor(FADE_MS / 50));
-            const delta = (FADE_TARGET - el.volume) / steps;
-            let i = 0;
-            const id = setInterval(() => {
-                i++;
-                el.volume = Math.min(FADE_TARGET, el.volume + delta);
-                if (i >= steps || el.volume >= FADE_TARGET) clearInterval(id);
-            }, 50);
-        } catch {
-            el.volume = FADE_TARGET;
-        }
-    };
-
-    // Reproduce en el MISMO gesto (click/touch) + fade-in
+    // Reproduce en el MISMO gesto + fade-in + fallback iOS
     const playSongNow = async (el) => {
         if (!el) return;
 
-        // Asegura src listo en el mismo gesto (sin await encadenado después de play)
-        await ensureAudioSrcLoaded(el);
+        ensureSrc(el);
 
-        // Intento directo
         try {
             await el.play();
             fadeIn(el);
             return;
-        } catch (e1) {
-            // Fallback iOS: muted→play→unmute en el mismo gesto
+        } catch {
+            // iOS fallback: muted→play→unmute en el MISMO gesto
             try {
                 el.muted = true;
                 await el.play();
@@ -118,20 +74,14 @@ export default function InviteClient({ initialName }) {
                     el.muted = false;
                     fadeIn(el);
                 });
-                return;
-            } catch (e2) {
-                console.warn("[audio] play bloqueado por el navegador", e2);
+            } catch {
+                // si el navegador sigue bloqueando, el siguiente gesto lo liberará
             }
         }
     };
 
     const handleShowInvite = async () => {
-        const el = audioRef.current;
-
-        // ✅ Reproducir EXACTO en el gesto del botón
-        await playSongNow(el);
-
-        // UI
+        await playSongNow(audioRef.current);
         setShowInvite(true);
         requestAnimationFrame(() => {
             try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch { }
@@ -143,13 +93,12 @@ export default function InviteClient({ initialName }) {
 
     return (
         <>
-            {/* Audio montado siempre. IMPORTANTE: evitar display:none en iOS */}
+            {/* Mantén el <audio> montado, visible para iOS (fuera de pantalla) */}
             <audio
                 ref={audioRef}
                 preload="auto"
                 playsInline
                 loop
-                // escondido pero en el flujo (iOS es más feliz así que con display:none)
                 style={{
                     position: "absolute",
                     width: 1,
@@ -159,24 +108,18 @@ export default function InviteClient({ initialName }) {
                     left: -9999,
                     top: -9999,
                 }}
-                // opcional: onError para ver 404 en prod
-                onError={(e) => {
-                    const t = e?.currentTarget;
-                    console.error("[audio] error cargando src:", t?.src);
-                }}
             />
 
             {!showInvite ? (
                 <PaulaWelcome guestName={toTitle(name)} onShowInvite={handleShowInvite} />
             ) : (
-                <main
-                    id="invite-top"
-                    className="relative mx-auto min-h-screen max-w-sm overflow-hidden px-4 text-center"
-                >
+                <main id="invite-top" className="relative mx-auto min-h-screen max-w-sm overflow-hidden px-4 text-center">
+                    {/* fondo */}
                     <div className="pointer-events-none fixed inset-0 -z-10">
                         <Image src="/assets/fondo.png" alt="" fill priority className="object-cover" />
                     </div>
 
+                    {/* HERO */}
                     <section className="relative flex min-h-[100vh] flex-col items-center justify-center pb-24 pt-10">
                         <div className="relative mx-auto h-72 w-72 select-none sm:h-80 sm:w-80">
                             <Image
@@ -191,18 +134,12 @@ export default function InviteClient({ initialName }) {
 
                         <p className="mt-1 text-sm text-[var(--baby-dark,#374151)]/80" style={{ fontSize: "18px" }}>
                             🤍 Hola,{" "}
-                            <span
-                                className="font-semibold font-[Dancing_Script] text-[var(--baby-dark,#111827)]"
-                                style={{ fontSize: "22px" }}
-                            >
+                            <span className="font-semibold font-[Dancing_Script] text-[var(--baby-dark,#111827)]" style={{ fontSize: "22px" }}>
                                 {toTitle(name)} 🤍
                             </span>
                         </p>
 
-                        <h1
-                            className="mt-2 font-bold font-[Dancing_Script] text-[var(--text-dark,#374151)]"
-                            style={{ fontSize: "25px" }}
-                        >
+                        <h1 className="mt-2 font-bold font-[Dancing_Script] text-[var(--text-dark,#374151)]" style={{ fontSize: "25px" }}>
                             Una pequeña Elefanta viene en camino
                         </h1>
 
@@ -237,6 +174,7 @@ export default function InviteClient({ initialName }) {
                                 <div className="flex items-center justify-between">
                                     <h3 className="font-semibold text-[var(--baby-dark,#374151)]">Dirección</h3>
                                     <div className="flex items-center gap-2">
+                                        {/* Icono */}
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-[var(--baby-pink,#F7BFCB)]" aria-hidden="true">
                                             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                                         </svg>
