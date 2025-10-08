@@ -8,15 +8,85 @@ import WishList from "@/components/WishList";
 import RSVPForm from "@/components/RSVPForm";
 
 // 📍 Dirección (texto fijo)
-const ADDRESS =
-    "5ta avenida, entre Av. Bolivar y Calle Peru. Catia.";
-
-// URL de Google Maps a partir de la dirección
+const ADDRESS = "5ta avenida, entre Av. Bolivar y Calle Peru. Catia.";
 const MAPS_URL = `https://maps.app.goo.gl/3g6gWe8sMChcPtKP6`;
+
+const AUDIO_SRC = "/audio/cancionElefante.mp3";
+const FADE_TARGET = 0.85; // volumen final
+const FADE_MS = 1500;     // duración fade-in
 
 const CountdownTimer = dynamic(() => import("@/components/CountdownTimer"), {
     ssr: false,
 });
+
+/**
+ * Reproductor singleton en window:
+ * - Evita crear múltiples <audio> al navegar o re-renderizar.
+ * - Arranca en el gesto del usuario (click al botón).
+ * - Incluye fade-in suave.
+ */
+function startElephantSong() {
+    if (typeof window === "undefined") return;
+
+    // Crea una sola instancia global
+    if (!window.__paulaAudio) {
+        const a = new Audio(AUDIO_SRC);
+        a.preload = "auto";
+        a.loop = true;
+        a.volume = 0; // inicia silencioso para hacer fade-in
+        window.__paulaAudio = a;
+    }
+
+    const a = window.__paulaAudio;
+
+    // Si ya está reproduciendo, no hacemos nada (evita reinicios)
+    if (!a.paused) return;
+
+    // Intenta reproducir con un fade-in
+    a.play().then(() => {
+        try {
+            // Fade-in lineal suave
+            const steps = Math.max(1, Math.floor(FADE_MS / 50)); // ~20 FPS
+            const delta = (FADE_TARGET - a.volume) / steps;
+            let i = 0;
+            const id = setInterval(() => {
+                i++;
+                a.volume = Math.min(FADE_TARGET, a.volume + delta);
+                if (i >= steps || a.volume >= FADE_TARGET) clearInterval(id);
+            }, 50);
+        } catch {
+            a.volume = FADE_TARGET;
+        }
+    }).catch(() => {
+        // Fallback: algunos navegadores pueden requerir un ajuste de mute
+        a.muted = true;
+        a.play().then(() => {
+            queueMicrotask(() => {
+                a.muted = false;
+                a.volume = 0;
+                const steps = Math.max(1, Math.floor(FADE_MS / 50));
+                const delta = (FADE_TARGET - a.volume) / steps;
+                let i = 0;
+                const id = setInterval(() => {
+                    i++;
+                    a.volume = Math.min(FADE_TARGET, a.volume + delta);
+                    if (i >= steps || a.volume >= FADE_TARGET) clearInterval(id);
+                }, 50);
+            });
+        }).catch(() => {
+            // Si aún falla, lo dejamos listo; el próximo gesto lo activará.
+        });
+    });
+}
+
+// Helper: "alex-garcia" -> "Alex Garcia"
+function toTitle(s = "") {
+    return s
+        .split("-")
+        .filter(Boolean)
+        .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : ""))
+        .join(" ");
+}
 
 export default function InviteClient({ initialName }) {
     const [showInvite, setShowInvite] = React.useState(false);
@@ -26,11 +96,14 @@ export default function InviteClient({ initialName }) {
         document.querySelector("#rsvp")?.scrollIntoView({ behavior: "smooth" });
     };
 
-    // Gate inicial: si no se mostró la invitación, renderiza PaulaWelcome
+    // Pantalla de bienvenida
     if (!showInvite) {
         const handleShowInvite = () => {
+            // 1) Arranca la música EXACTO en el click del botón
+            startElephantSong();
+            // 2) Muestra la invitación
             setShowInvite(true);
-            // forzamos scroll al tope tras el repaint (iOS friendly)
+            // 3) Lleva al top (iOS-friendly)
             requestAnimationFrame(() => {
                 try {
                     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -41,10 +114,10 @@ export default function InviteClient({ initialName }) {
             });
         };
 
-        return <PaulaWelcome guestName={name} onShowInvite={handleShowInvite} />;
+        return <PaulaWelcome guestName={toTitle(name)} onShowInvite={handleShowInvite} />;
     }
 
-    // Contenido de la invitación (hero + countdown + wishlist visual + formulario)
+    // Contenido principal de la invitación
     return (
         <main
             id="invite-top"
@@ -83,7 +156,7 @@ export default function InviteClient({ initialName }) {
                         className="font-semibold font-[Dancing_Script] text-[var(--baby-dark,#111827)]"
                         style={{ fontSize: "22px" }}
                     >
-                        {name} 🤍
+                        {toTitle(name)} 🤍
                     </span>
                 </p>
 
@@ -111,6 +184,7 @@ export default function InviteClient({ initialName }) {
                             </span>
                         </span>
                     </p>
+
                     <div className="mt-3 text-center">
                         <span className="text-md font-medium">
                             <span className=" text-[var(--baby-pink,#374151)]/90 font-bold">
@@ -130,6 +204,7 @@ export default function InviteClient({ initialName }) {
                         <CountdownTimer />
                         <br />
                         <br />
+
                         <div className="flex items-center justify-between">
                             <h3 className="font-semibold text-[var(--baby-dark,#374151)]">
                                 Dirección
@@ -179,7 +254,7 @@ export default function InviteClient({ initialName }) {
                 className="relative flex min-h-[100vh] flex-col items-center justify-center pb-24 pt-10"
             >
                 <div className="w-full">
-                    <RSVPForm prefillName={name} />
+                    <RSVPForm prefillName={toTitle(name)} />
                 </div>
             </section>
         </main>
