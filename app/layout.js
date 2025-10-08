@@ -13,18 +13,18 @@ const quicksand = Quicksand({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://invitacion-paula.vercel.app"), // 👈 importante
+  metadataBase: new URL("https://invitacion-paula.vercel.app"),
   title: "La Invitación de Paula",
   description: "¡Ven a celebrar la llegada de nuestra pequeña elefanta Paula!",
   openGraph: {
     title: "Baby Shower de Paula 🎀",
     description:
       "Descubre tu invitación personalizada y acompáñanos en este día tan especial 🐘💖",
-    url: "/", // gracias a metadataBase será absoluta
+    url: "/",
     siteName: "La Invitación de Paula",
     images: [
       {
-        url: "/assets/elefante1.png", // se resuelve a https://.../assets/elefante1.png
+        url: "/assets/elefante1.png",
         width: 800,
         height: 800,
         alt: "Elefantita con globos - Baby Shower de Paula",
@@ -45,6 +45,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
+      <head>
+        {/* acelera el primer play en vercel */}
+        <link rel="preload" as="audio" href="/audio/cancionElefante.mp3" />
+      </head>
       <body
         className={`${dancingScript.variable} ${quicksand.variable} font-quicksand`}
       >

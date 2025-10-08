@@ -80,7 +80,7 @@ export default function PaulaWelcome({ guestName, onShowInvite }) {
                             type="button"
                             aria-label="Muéstrame mi invitación"
                             onClick={onShowInvite}
-                            onTouchEnd={(e) => { e.preventDefault(); onShowInvite(e); }} // 👈 iOS asegura el gesto
+                            onTouchEnd={(e) => { e.preventDefault(); onShowInvite(e); }} // iOS asegura el gesto
                             whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.98 }}
                             className="inline-flex items-center gap-2 rounded-2xl bg-pink-600 px-6 py-3 text-white font-semibold shadow-lg shadow-pink-200/60 hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-300"
@@ -88,6 +88,7 @@ export default function PaulaWelcome({ guestName, onShowInvite }) {
                             <span aria-hidden>💌</span>
                             Muéstrame mi invitación
                         </motion.button>
+
 
                     </div>
                 </motion.section>

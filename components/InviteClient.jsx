@@ -38,7 +38,11 @@ export default function InviteClient({ initialName }) {
     // Reproduce en el MISMO gesto + fade-in suave
     const playSongNow = (el) => {
         if (!el) return;
-        if (!el.src || el.src.endsWith("/")) el.src = AUDIO_SRC;
+
+        // ✅ asigna src absoluto solo cuando haga falta
+        if (!el.src) {
+            el.src = new URL(AUDIO_SRC, window.location.origin).toString();
+        }
 
         // Arranca con volumen 0 y hacemos fade-in
         el.volume = 0;
@@ -63,7 +67,6 @@ export default function InviteClient({ initialName }) {
             el.play().then(() => {
                 queueMicrotask(() => {
                     el.muted = false;
-                    // Aplica fade también aquí
                     el.volume = 0;
                     const steps = Math.max(1, Math.floor(FADE_MS / 50));
                     const delta = (FADE_TARGET - el.volume) / steps;
@@ -80,10 +83,9 @@ export default function InviteClient({ initialName }) {
         });
     };
 
-    const handleShowInvite = (e) => {
-        const el = audioRef.current;
+    const handleShowInvite = () => {
         // 1) Reproducir EXACTO en el gesto del botón
-        playSongNow(el);
+        playSongNow(audioRef.current);
 
         // 2) Mostrar la invitación
         setShowInvite(true);
@@ -99,10 +101,10 @@ export default function InviteClient({ initialName }) {
 
     return (
         <>
-            {/* ⬇️ Audio SIEMPRE montado (antes y después del click) */}
+            {/* ⬇️ Audio SIEMPRE montado (antes y después del click)
+          👉 OJO: sin src inicial para evitar el warning y peticiones fantasma */}
             <audio
                 ref={audioRef}
-                src=""            // se fija al pulsar
                 preload="auto"
                 playsInline       // crucial en iOS
                 loop
