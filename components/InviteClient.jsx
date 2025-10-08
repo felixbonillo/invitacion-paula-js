@@ -16,7 +16,7 @@ const AUDIO_PATH = "/audio/cancionelefante.mp3";     // todo minúsculas
 // const AUDIO_PATH = "/audio/cancionElefante.mp3";  // si renombraste con E mayúscula
 
 const FADE_TARGET = 0.85;  // volumen final
-const FADE_MS = 1800;      // duración del fade-in
+const FADE_MS = 2200;      // duración del fade-in
 
 const CountdownTimer = dynamic(() => import("@/components/CountdownTimer"), { ssr: false });
 
